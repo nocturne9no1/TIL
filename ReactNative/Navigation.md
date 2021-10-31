@@ -494,7 +494,60 @@
 #### 타이틀 수정
 
 * 헤더 타이틀은 Screen 컴포넌트의 `name` 속성을 기본값으로 사용
+
 * 헤더 타이틀 변경 가장 쉬운 방법: `name`을 원하는 값으로 변경하는 것
 
+* `src/navigations/Stack.js`
 
+  ```react
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{ cardStyle: { backgroundColor: '#ffffff' } }}
+      >
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="List" component={List} />
+        <Stack.Screen name="Detail" component={Item} />
+      </Stack.Navigator>
+  ```
+
+  * Item 화면을 나타내는 Screen 컴포넌트의 name 속성을 Detail 로 변경
+  * name의 값이 변경되었으므로 Item 화면으로 이동할 때 navigate 함수에 전달하는 첫 번째 파라미터 값도 변경되어야 함
+
+* `src/screens/List.js`
+
+  ```react
+  ...
+  const List = ({ navigation }) => {
+    const _onPress = item => {
+      navigation.navigate('Detail', { id: item._id, name: item.name });
+    };
+  
+  ...
+  ```
+
+  * name 속성을 변경하는 것은 간편
+  * but, name 속성을 이용하는 곳 찾아다니며 모두 수정해야 하는 단점
+
+* name 속성 변경 시의 단점을 피하며 화면 타이틀 변경하려면
+
+  * headerTitle 속성 이용
+
+* `src/navigations/Stack.js`
+
+  ```react
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{ cardStyle: { backgroundColor: '#ffffff' } }}
+      >
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen
+          name="List"
+          component={List}
+          options={{ headerTitle: 'List Screen'}}
+        />
+        <Stack.Screen name="Detail" component={Item} />
+      </Stack.Navigator>
+  ```
+
+  * List 화면의 타이틀 List Screen으로 변경
 
