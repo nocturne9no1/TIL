@@ -416,5 +416,362 @@ expo install firebase
   ...
   ```
 
+  * 와 여기서 하루 종일 걸렸당...
+  * 8시간 짜리 삽질
+    * 왜 theme 이 안돼징...?
+    * 8시간뒤
+    * import { ThemeProvider } from "styled-components/native";
+    * 이렇게 해야 하는데
+    * import { ThemeProvider } from "react-navigation/native";
+    * 자동완성으로 이렇게 해부려따 ㅎㅎ
+    * 자동완성 과신하지 말기!
+  * 이제야 나오네잉...
+
+
+
+### 로그인 화면
+
+* 이메일과 비번 입력받을 수 있도록 화면 만들어보자
+* 필요 컴포넌트
+  * 로고 렌더링
+  * 사용자 입력 받는
+  * 클릭과 그에 따른 이벤트 발생하는
+
+#### Image Component
+
+* url 전달받아 원격에 있는 이미지 렌더링하는 Image 컴포넌트 만들어보자
+
+* 로그인 화면에서는 Image 컴포넌트를 이용해 앱 로고 렌더링
+
+* 우선 Image 컴포넌트의 배경색으로 사용할 값 theme.js 파일에 정의하고 진행
+
+* `src/theme.js`
+
+  ```react
+  export const theme = {
+    background: colors.white,
+    text: colors.black,
+  
+    imageBackground: colors.grey_0,
+  };
+  ```
+
+* `src/components/Image.js`
+
+  ```react
+  import React from "react";
+  import styled from "styled-components/native";
+  
+  const Container = styled.View`
+    align-self: center;
+    margin-bottom: 30px;
+  `;
+  
+  const StyledImage = styled.Image`
+    background-color: ${({ theme }) => theme.imageBackground};
+    width: 100px;
+    height: 100px;
+  `;
+  
+  const Image = ({ url, imageStyle }) => {
+    return (
+      <Container>
+        <StyledImage source={{ uri: url }} style={imageStyle} />
+      </Container>
+    );
+  };
+  
+  export default Image;
+  ```
+
+  * props 로 전달되는 url 을 렌더링하고 imageStyle을 전달받아 컴포넌트의 스타일을 수정할 수 있게 작성
+
+* Image 컴포넌트 작성 완료 후 components 폴더에 index.js 파일 생성
+
+* src/components/index.js
+
+  ```react
+  import Image from "./Image";
+  
+  export { Image };
+  ```
+
+* Image 컴포넌트 사용하여 Login 화면 수정
+
+* `src/screens/Login.js`
+
+  ```react
+  ...
+  import { Image } from "../components";
+  
+  ...
+  
+  const Login = ({ navigation }) => {
+    return (
+      <Container>
+        <Image />
+        <Button title="Signup" onPress={() => navigation.navigate("Signup")} />
+      </Container>
+    );
+  };
+  
+  ...
+  ```
+
+  
+
+#### 로고 적용하기
+
+* 이번엔 앱 로고를 파이어베이스 스토리지에 업로드하고 로그인 화면에서 사용해보자
+
+* 앞서 작성한 Image 컴포넌트의 크기인 100 x 100 보다 큰 사이즈로 로고 이미지 준비
+
+* 파일을 파이어베이스 스토리지에 업로드
+
+* 파일 업로드 후 파일 정보에서 이름 클릭 시 해당 파일의 url 얻을 수 있음
+
+* 스토리지에 업로드된 이미지의 url 을 관리하기 위해 utils 폴더 밑에 images.js 파일 생성
+
+* 앞서 얻은 url 이용해 다음과 같이 작성
+
+* `src/utils/images.js`
+
+  ```react
+  const prefix =
+    "https://firebasestorage.googleapis.com/v0/b/react-native-simple-chat-b0d91.appspot.com/o/";
+  
+  export const images = {
+    logo: `${prefix}/39-2.png?alt=media`,
+  };
+  ```
+
+  * 여기서 주의 점은 복사된 주소의 쿼리 스트링에서 token 부분 제외하고 사용해야 한다는 점
+
+* 이제 로고 이미지도 로딩 과정에서 미리 불러오도록 App 컴포넌트 다음과 같이 수정
+
+* `src/App.js`
+
+  ```react
+  ...
+  import { images } from '../utils/images';
+  
+  ...
+  
+  const App = () => {
+    const [isReady, setIsReady] = useState(false);
+  
+    const _loadAssets = async () => {
+      const imageAssets = cacheImages([require("../assets/splash.png"), ...Object.values(images)]);
+      const fontAssets = cacheFonts([]);
+  
+  ...
+  ```
+
+* 로그인 화면에서 불러오자
+
+* `src/screens/Login.js`
+
+  ```react
+  ...
+  import { images } from "../utils/images";
+  
+  ...
+  
+  const Login = ({ navigation }) => {
+    return (
+      <Container>
+        <Image url={images.logo} />
+        <Button title="Signup" onPress={() => navigation.navigate("Signup")} />
+      </Container>
+    );
+  };
+  ```
+
+  * 근데 이렇게 해서 실행하면 경고메세지 나옴
+
+  * 스토리지 파일 접근 권한 문제
+
+  * 보안 규칙 수정해서 해결
+
+  * storage 의 rules 탭에서 규칙 다음과 같이 수정
+
+    ```
+    rules_version = '2';
+    service firebase.storage {
+      match /b/{bucket}/o {
+      	match /39-2.png {
+        	allow read;
+        }
+      }
+    }
+    ```
+
+* 마지막으로 로그인 화면에서 Image 컴포넌트에 imageStyle 전달해 렌더링 되는 로고 모습 변경
+
+* `src/screens/Login.js`
+
+  ```react
+  ...
+  const Login = ({ navigation }) => {
+    return (
+      <Container>
+        <Image url={images.logo} imageStyle={{ borderRadius: 8 }}/>
+        <Button title="Signup" onPress={() => navigation.navigate("Signup")} />
+      </Container>
+    );
+  };
+  
+  ...
+  ```
+
+
+
+#### Input 컴포넌트
+
+* 아이디 비번 입력할 수 있게 Input 컴포넌트 만들어보자
+
+* 먼저 Input 컴포넌트에서 placeholder 등에 사용할 색 정의
+
+* `src/theme.js`
+
+  ```react
+  export const theme = {
+    ...
+  
+    label: colors.grey_1,
+    inputPlaceholder: colors.grey_1,
+    inputBorder: colors.grey_1,
+  };
+  ```
+
+* 동일한 색 사용했지만 이후 유지보수 위해 적용되는 부분 명확하게 알 수 있도록 정의
+
+* components 폴더에 Input.js 파일 생성하고 Input 컴포넌트 만들어보자
+
+* `src/components/Input.js`
+
+  ```react
+  import React, { useState } from "react";
+  import styled from "styled-components/native";
+  
+  const Container = styled.View`
+    flex-direction: column;
+    width: 100%;
+    margin: 10px 0;
+  `;
+  const Label = styled.Text`
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: ${({ theme, isFocused }) => (isFocused ? theme.text : theme.label)};
+  `;
+  const StyledTextInput = styled.TextInput.attrs(({ theme }) => ({
+    placeholderTextColor: theme.inputPlaceholder,
+  }))`
+    background-color: ${({ theme }) => theme.background};
+    color: ${({ theme }) => theme.text};
+    padding: 20px 10px;
+    font-size: 16px;
+    border: 1px solid
+      ${({ theme, isFocused }) => (isFocused ? theme.text : theme.inputBorder)};
+    border-radius: 4px;
+  `;
+  
+  const Input = ({
+    label,
+    value,
+    onChangeText,
+    onSubmitEditing,
+    onBlur,
+    placeholder,
+    isPassword,
+    returnKeyType,
+    maxLength,
+  }) => {
+    const [isFocused, setIsFocused] = useState(false);
+  
+    return (
+      <Container>
+        <Label isFocused={isFocused}>{label}</Label>
+        <StyledTextInput
+          isFocused={isFocused}
+          value={value}
+          onChangeText={onChangeText}
+          onSubmitEditing={onSubmitEditing}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur();
+          }}
+          placeholder={placeholder}
+          secureTextEntry={isPassword}
+          returnKeyType={returnKeyType}
+          maxLength={maxLength}
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="none" // iOS only
+          underlineColorAndroid="transparent" // Android only
+        />
+      </Container>
+    );
+  };
+  
+  export default Input;
+  ```
+
+  * `secrueTextEntry`: 입력되는 문자 감추는 기능
+
+* index.js 에 Input 추가
+
+* 이제 사용자 이멜과 비번 입력받을 수 있도록 Input 컴포넌트 이용해 로그인 화면 수정
+
+* `src/screens/Login.js`
+
+  ```react
+  import React, { useState } from "react";
+  import styled from "styled-components/native";
+  import { Button } from "react-native";
+  
+  import { Image } from "../components";
+  import { images } from "../utils/images";
+  
+  const Container = styled.View`
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    background-color: ${({ theme }) => theme.background};
+    padding: 20px;
+  `;
+  
+  const Login = ({ navigation }) => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+  
+    return (
+      <Container>
+        <Image url={images.logo} imageStyle={{ borderRadius: 8 }} />
+        <Input
+          label="Email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          onSubmitEditing={() => {}}
+          placeholder="Email"
+          returnKeyType="next"
+        />
+        <Input
+          label="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          onSubmitEditing={() => {}}
+          placeholder="Password"
+          returnKeyType="done"
+          isPassword
+        />
+        <Button title="Signup" onPress={() => navigation.navigate("Signup")} />
+      </Container>
+    );
+  };
+  ```
+
   
 
