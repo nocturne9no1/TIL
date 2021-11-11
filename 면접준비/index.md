@@ -1,5 +1,9 @@
 # 직무 면접 준비
 
+[TOC]
+
+
+
 * 이곳에 목록을 정리하고 추후 하나씩 markdown으로 정리한 뒤 블로그에 올린다
 * 목록에는 점점 추가 될 수 있고 완료 한 것은 취소선 처리 할 것이다.
 
@@ -213,6 +217,16 @@ https://www.sitepoint.com/how-to-speed-up-your-ux-with-skeleton-screens/
 https://vuetifyjs.com/en/components/skeleton-loaders/
 
 #### 프론트엔드 주제를 가지고 발표해야 한다면 바로 가능한게 있나요?
+
+
+
+
+
+## 참고링크
+
+https://realmojo.tistory.com/300
+
+
 
 
 
